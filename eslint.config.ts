@@ -9,7 +9,7 @@ export default [
     },
     plugins: { my: myPlugin },
     rules: {
-      'my/enforce-foo-bar': 'error',
+      'my/enforce-foo-bar': ['error', { requiredValue: 'bat' }],
     },
   },
 ];

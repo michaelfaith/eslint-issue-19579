@@ -5,12 +5,22 @@ const rule: Rule.RuleModule = {
     type: 'problem',
     docs: {
       description:
-        "Enforce that a variable named `foo` can only be assigned a value of 'bar'.",
+        'Enforce that a variable named `foo` can only be assigned a specific value, provided by options.',
     },
     fixable: 'code',
-    schema: [],
+    schema: [
+      {
+        type: 'object',
+        properties: {
+          requiredValue: { type: 'string' },
+        },
+        additionalProperties: false,
+      },
+    ],
   },
   create(context) {
+    const expectedValue = context.options[0]?.requiredValue || 'bar';
+
     return {
       // Performs action in the function on every variable declarator
       VariableDeclarator(node) {
@@ -22,7 +32,7 @@ const rule: Rule.RuleModule = {
             if (
               node.init &&
               node.init.type === 'Literal' &&
-              node.init.value !== 'bar'
+              node.init.value !== expectedValue
             ) {
               /*
                * Report error to ESLint. Error message uses
@@ -34,12 +44,13 @@ const rule: Rule.RuleModule = {
               context.report({
                 node,
                 message:
-                  'Value other than "bar" assigned to `const foo`. Unexpected value: {{ notBar }}.',
+                  'Value other than "{{ expectedValue }}" assigned to `const foo`. Unexpected value: "{{ actualValue }}".',
                 data: {
-                  notBar: String(node.init.value),
+                  expectedValue,
+                  actualValue: String(node.init.value),
                 },
                 fix(fixer) {
-                  return fixer.replaceText(node.init, '"bar"');
+                  return fixer.replaceText(node.init, `"${expectedValue}"`);
                 },
               });
             }
